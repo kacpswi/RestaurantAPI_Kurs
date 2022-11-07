@@ -16,6 +16,13 @@ using System.Threading.Tasks;
 using RestaurantAPI_v2.Services;
 using RestaurantAPI_v2.Middleware;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
+using FluentValidation;
+using RestaurantAPI_v2.Models;
+using RestaurantAPI_v2.Models.Validators;
+using FluentValidation.AspNetCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace RestaurantAPI_v2
 {
@@ -31,7 +38,28 @@ namespace RestaurantAPI_v2
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            
+            var authenticatorSettings = new AuthenticationSettings();
+
+            Configuration.GetSection("Authentication").Bind(authenticatorSettings);
+
+            services.AddAuthentication(option =>
+            {
+                option.DefaultAuthenticateScheme = "Bearer";
+                option.DefaultScheme = "Bearer";
+                option.DefaultChallengeScheme = "Bearer";
+            }).AddJwtBearer(cfg =>
+            {
+                cfg.RequireHttpsMetadata = false;
+                cfg.SaveToken = true;
+                cfg.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidIssuer = authenticatorSettings.JwtIssuer,
+                    ValidAudience = authenticatorSettings.JwtIssuer,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(authenticatorSettings.JwtKey)),
+                };
+            });
+
+            services.AddControllers().AddFluentValidation();
             services.AddControllers();
             services.AddDbContext<RestaurantDbContext>();
             services.AddScoped<RestaurantSeeder>();
@@ -40,8 +68,13 @@ namespace RestaurantAPI_v2
             services.AddScoped<ErrorHandlingMiddleware>();
             services.AddSwaggerGen();
             services.AddScoped<RequestTimeMiddleware>();
+            services.AddScoped<IDishService, DishService>();
+            services.AddScoped<IAccountService, AccountService>();
+            services.AddScoped<IPasswordHasher<User>,PasswordHasher<User>>();
+            services.AddScoped<IValidator<RegisterUserDto>, RegisterUserValidator>();
 
         }
+
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, RestaurantSeeder seeder)
@@ -56,6 +89,8 @@ namespace RestaurantAPI_v2
 
             app.UseMiddleware<ErrorHandlingMiddleware>();
             app.UseMiddleware<RequestTimeMiddleware>();
+
+            app.UseAuthentication();
 
             app.UseHttpsRedirection();
 
