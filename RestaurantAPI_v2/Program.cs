@@ -16,7 +16,7 @@ namespace RestaurantAPI_v2
         {
             CreateHostBuilder(args).Build().Run();
         }
-
+        // Some description
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
