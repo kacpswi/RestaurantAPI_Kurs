@@ -34,14 +34,14 @@ namespace RestaurantAPI_v2
         }
 
         public IConfiguration Configuration { get; }
-        //comment
+        // comment
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             var authenticatorSettings = new AuthenticationSettings();
 
             Configuration.GetSection("Authentication").Bind(authenticatorSettings);
-
+            services.AddSingleton(authenticatorSettings);
             services.AddAuthentication(option =>
             {
                 option.DefaultAuthenticateScheme = "Bearer";
@@ -57,6 +57,11 @@ namespace RestaurantAPI_v2
                     ValidAudience = authenticatorSettings.JwtIssuer,
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(authenticatorSettings.JwtKey)),
                 };
+            });
+
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("HasNationality", builder => builder.RequireClaim("Nationality","German","Polish"));
             });
 
             services.AddControllers().AddFluentValidation();
@@ -101,7 +106,7 @@ namespace RestaurantAPI_v2
             });
 
             app.UseRouting();
-
+            app.UseAuthorization();
             app.UseEndpoints(endpoints => 
             {
                 endpoints.MapControllers();
