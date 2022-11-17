@@ -23,6 +23,8 @@ using RestaurantAPI_v2.Models.Validators;
 using FluentValidation.AspNetCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using RestaurantAPI_v2.Authorization;
+using Microsoft.AspNetCore.Authorization;
 
 namespace RestaurantAPI_v2
 {
@@ -62,8 +64,10 @@ namespace RestaurantAPI_v2
             services.AddAuthorization(options =>
             {
                 options.AddPolicy("HasNationality", builder => builder.RequireClaim("Nationality","German","Polish"));
+                options.AddPolicy("Atleast20", builder => builder.AddRequirements(new MinimumAgeRequirement(20)));
             });
-
+            services.AddScoped<IAuthorizationHandler, MinimumAgeRequirementHandler>();
+            services.AddScoped<IAuthorizationHandler, ResourceOperationRequirementHandler>();
             services.AddControllers().AddFluentValidation();
             services.AddControllers();
             services.AddDbContext<RestaurantDbContext>();
@@ -77,6 +81,8 @@ namespace RestaurantAPI_v2
             services.AddScoped<IAccountService, AccountService>();
             services.AddScoped<IPasswordHasher<User>,PasswordHasher<User>>();
             services.AddScoped<IValidator<RegisterUserDto>, RegisterUserValidator>();
+            services.AddScoped<IUserContextService, UserContextService>();
+            services.AddHttpContextAccessor();
 
         }
 

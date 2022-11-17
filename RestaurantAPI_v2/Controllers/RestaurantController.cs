@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -19,7 +20,7 @@ namespace RestaurantAPI_v2.Controllers
     public class RestaurantController : ControllerBase
 
     {
-        
+
         private readonly IRestaurantService _restaurantService;
 
         public RestaurantController(IRestaurantService restaurantService)
@@ -43,14 +44,13 @@ namespace RestaurantAPI_v2.Controllers
         {
             _restaurantService.Delete(id);
 
-            return NotFound();
+            return NoContent();
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin, Manager")]
         public ActionResult CreateRestaurant([FromBody]CreateRestaurantDto dto)
         {
-            
 
             var id = _restaurantService.Create(dto);
 
@@ -58,7 +58,7 @@ namespace RestaurantAPI_v2.Controllers
         }
 
         [HttpGet]
-        [Authorize(Policy = "HasNationality")]
+        [Authorize(Policy = "Atleast20")]
         public ActionResult<IEnumerable<RestaurantDto>> GetAll()
         {
             var restaurantsDtos = _restaurantService.GetAll();
