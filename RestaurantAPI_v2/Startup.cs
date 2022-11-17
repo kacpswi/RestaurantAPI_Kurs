@@ -85,7 +85,7 @@ namespace RestaurantAPI_v2
             services.AddScoped<IValidator<RegisterUserDto>, RegisterUserValidator>();
             services.AddScoped<IUserContextService, UserContextService>();
             services.AddHttpContextAccessor();
-
+            services.AddScoped<IValidator<RestaurantQuery>, RestaurantQueryValidator>();
         }
 
         
